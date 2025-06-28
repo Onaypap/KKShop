@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <title>KKShop - Promotions</title>
+  <link rel="stylesheet" href="style.css" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <style>
+    .product .price del {
+      color: #888;
+      margin-right: 8px;
+    }
+
+    .product .price {
+      color: #e53935;
+      font-weight: bold;
+    }
+
+    .notification {
+      position: fixed;
+      top: 20px;
+      right: 20px;
+      background-color: #4CAF50;
+      color: white;
+      padding: 15px 20px;
+      border-radius: 5px;
+      box-shadow: 0 4px 6px rgba(0,0,0,0.2);
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.3s ease-in-out;
+      z-index: 1000;
+    }
+
+    .notification.show {
+      opacity: 1;
+    }
+  </style>
+</head>
+<body>
+
+<header>
+  <div class="container header-content">
+    <div class="logo">  
+      <a href="index.html">  
+        <img src="images/KKShoplogo.png" alt="Logo KKShop" />
+      </a>
+    </div>
+    <nav>
+      <ul class="nav-links">
+        <li><a href="index.html">Accueil</a></li>
+        <li><a href="promotions.html" class="active">Promotions</a></li>
+        <li><a href="products.html">Voir les produits</a></li>
+        <li><a href="contact.html">Contact</a></li> <!-- ✅ Lien corrigé -->
+      </ul>
+    </nav>
+    <div class="search-bar">
+      <input type="text" placeholder="Rechercher un produit..." />
+      <button>🔍</button>
+    </div>
+    <div class="cart-icon" onclick="toggleCart()">🛒<span id="cart-count">0</span></div>
+  </div>
+</header>
+
+<section class="promotions container">
+  <h1>Promotions du moment</h1>
+  <div class="product-list" id="promo-list">
+    <!-- Les produits seront injectés ici -->
+  </div>
+</section>
+
+<!-- Panier -->
+<div class="cart-sidebar" id="cart-sidebar">
+  <h2>Votre panier</h2>
+  <ul id="cart-items"></ul>
+  <p>Total : <span id="cart-total">0.00</span> €</p>
+  <button onclick="toggleCart()">Fermer</button>
+  <p id="cart-note"></p>
+</div>
+
+<!-- Notification -->
+<div id="notification" class="notification">Produit ajouté au panier !</div>
+
+<footer>
+  <div class="container">
+    <p>&copy; 2025 Ma boutique - Tous droits réservés</p>
+  </div>
+</footer>
+
+<!-- Import des données de produit -->
+<script src="products-data.js"></script>
+
+<script>
+  let cart = [];
+
+  const cartSidebar = document.getElementById("cart-sidebar");
+  const cartCount = document.getElementById("cart-count");
+  const cartItemsList = document.getElementById("cart-items");
+  const cartTotal = document.getElementById("cart-total");
+  const cartNote = document.getElementById("cart-note");
+
+  function loadCart() {
+    const savedCart = localStorage.getItem('kkshop_cart');
+    if (savedCart) {
+      cart = JSON.parse(savedCart);
+      updateCart();
+    }
+  }
+
+  function saveCart() {
+    localStorage.setItem('kkshop_cart', JSON.stringify(cart));
+  }
+
+  function toggleCart() {
+    cartSidebar.classList.toggle("open");
+  }
+
+  function addToCart(name, price) {
+    cart.push({ name, price });
+    updateCart();
+    saveCart();
+    showNotification(`${name} ajouté au panier`);
+  }
+
+  function showNotification(message) {
+    const notif = document.getElementById("notification");
+    notif.textContent = message;
+    notif.classList.add("show");
+    setTimeout(() => {
+      notif.classList.remove("show");
+    }, 2000);
+  }
+
+  function removeFromCart(index) {
+    cart.splice(index, 1);
+    updateCart();
+    saveCart();
+  }
+
+  function updateCart() {
+    cartItemsList.innerHTML = "";
+    let total = 0;
+    cart.forEach((item, index) => {
+      total += item.price;
+      const li = document.createElement("li");
+      li.innerHTML = `${item.name} - ${item.price.toFixed(2)} € <button class="remove-btn" onclick="removeFromCart(${index})">❌</button>`;
+      cartItemsList.appendChild(li);
+    });
+    cartCount.textContent = cart.length;
+    cartTotal.textContent = total.toFixed(2);
+    cartNote.textContent = "Ce site est faux, le panier est uniquement présent à but esthétique.";
+  }
+
+  function displayPromotions() {
+    const promoList = document.getElementById("promo-list");
+    products.filter(p => p.oldPrice).forEach(product => {
+      const article = document.createElement("article");
+      article.className = "product";
+      article.innerHTML = `
+        <img src="${product.image}" alt="${product.name}" />
+        <h3>${product.name}</h3>
+        <p>${product.description}</p>
+        <p class="price"><del>${product.oldPrice.toFixed(2)} €</del> ${product.price.toFixed(2)} €</p>
+        <button>Ajouter au panier</button>
+      `;
+      article.querySelector("button").addEventListener("click", () => {
+        addToCart(product.name, product.price);
+      });
+      promoList.appendChild(article);
+    });
+  }
+
+  loadCart();
+  displayPromotions();
+</script>
+
+</body>
+</html>

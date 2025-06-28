@@ -1,0 +1,229 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <title>Tous les produits - Ma boutique</title>
+  <link rel="stylesheet" href="style.css" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <style>
+    /* Exemple simple de style pour le bouton actif */
+    .filter-buttons button {
+      background-color: transparent;
+      border: 1px solid #333;
+      color: #333;
+      padding: 8px 16px;
+      margin-right: 10px;
+      cursor: pointer;
+      transition: background-color 0.3s ease, color 0.3s ease;
+    }
+    .filter-buttons button.active {
+      background-color: #007BFF; /* bleu */
+      color: white;
+      border-color: #007BFF;
+    }
+  </style>
+</head>
+<body>
+
+<header>
+  <div class="container header-content">
+    <div class="logo">
+      <a href="index.html">
+        <img src="images/KKShoplogo.png" alt="Logo KKShop" />
+      </a>
+    </div>
+    <nav>
+      <ul class="nav-links">
+        <li><a href="index.html">Accueil</a></li>
+        <li><a href="promotions.html">Promotions</a></li>
+        <li><a href="products.html">Tous les produits</a></li>
+        <li><a href="contact.html">Contact</a></li> <!-- ✅ Lien corrigé -->
+      </ul>
+    </nav>
+    <div class="search-bar">
+      <input type="text" id="searchInput" placeholder="Rechercher un produit..." />
+      <button onclick="handleSearch()">🔍</button>
+    </div>
+    <div class="cart-icon" onclick="toggleCart()">🛒<span id="cart-count">0</span></div>
+  </div>
+</header>
+
+<main class="container">
+  <h1>Nos Produits</h1>
+  <div class="filter-buttons">
+    <button id="btnAll" onclick="renderProducts(false)">Tous les produits</button>
+    <button id="btnPromo" onclick="renderProducts(true)">Promotions</button>
+  </div>
+  <div class="product-list"></div>
+</main>
+
+<!-- Panier -->
+<div class="cart-sidebar" id="cart-sidebar">
+  <h2>Votre panier</h2>
+  <ul id="cart-items"></ul>
+  <p>Total : <span id="cart-total">0.00</span> €</p>
+  <button onclick="toggleCart()">Fermer</button>
+  <p id="cart-note"></p>
+</div>
+
+<div id="notification" class="notification">Produit ajouté au panier !</div>
+
+<footer>
+  <div class="container">
+    <p>&copy; 2025 Ma boutique - Tous droits réservés</p>
+  </div>
+</footer>
+
+<!-- CHARGEMENT DES DONNÉES -->
+<script src="products-data.js"></script>
+
+<!-- Script de fonctionnement -->
+<script>
+  const productList = document.querySelector('.product-list');
+  const searchInput = document.getElementById('searchInput');
+  const btnAll = document.getElementById('btnAll');
+  const btnPromo = document.getElementById('btnPromo');
+
+  function levenshtein(a, b) {
+    const matrix = Array.from({ length: b.length + 1 }, (_, i) => [i]);
+    for (let j = 0; j <= a.length; j++) matrix[0][j] = j;
+    for (let i = 1; i <= b.length; i++) {
+      for (let j = 1; j <= a.length; j++) {
+        const cost = a[j - 1].toLowerCase() === b[i - 1].toLowerCase() ? 0 : 1;
+        matrix[i][j] = Math.min(
+          matrix[i - 1][j] + 1,
+          matrix[i][j - 1] + 1,
+          matrix[i - 1][j - 1] + cost
+        );
+      }
+    }
+    return matrix[b.length][a.length];
+  }
+
+  function renderProducts(onlyPromo = false, searchQuery = '') {
+    productList.innerHTML = '';
+    let filtered = onlyPromo ? products.filter(p => p.oldPrice) : products;
+
+    if (searchQuery) {
+      const query = searchQuery.toLowerCase();
+      filtered = filtered.filter(p => {
+        const name = p.name.toLowerCase();
+        const dist = levenshtein(name, query);
+        return name.includes(query) || dist <= 3;
+      });
+    }
+
+    if (filtered.length === 0) {
+      productList.innerHTML = '<p>Aucun produit trouvé.</p>';
+      return;
+    }
+
+    filtered.forEach(prod => {
+      const article = document.createElement('article');
+      article.className = 'product';
+      article.innerHTML = `
+        <img src="${prod.image}" alt="${prod.name}" />
+        <h3>${prod.name}</h3>
+        <p>${prod.description}</p>
+        <p class="price">
+          ${prod.oldPrice ? `<del>${prod.oldPrice.toFixed(2)} €</del>` : ''} 
+          ${prod.price.toFixed(2)} €
+        </p>
+        <button aria-label="Ajouter ${prod.name} au panier">Ajouter au panier</button>
+      `;
+      article.querySelector('button').addEventListener('click', () => addToCart(prod.name, prod.price));
+      productList.appendChild(article);
+    });
+
+    // Gérer la classe active sur les boutons filtres
+    if (onlyPromo) {
+      btnPromo.classList.add('active');
+      btnAll.classList.remove('active');
+    } else {
+      btnAll.classList.add('active');
+      btnPromo.classList.remove('active');
+    }
+  }
+
+  function handleSearch() {
+    const query = searchInput.value.trim();
+    renderProducts(false, query);
+  }
+
+  searchInput.addEventListener('input', () => {
+    const query = searchInput.value.trim();
+    renderProducts(false, query);
+  });
+
+  let cart = [];
+  const cartSidebar = document.getElementById("cart-sidebar");
+  const cartCount = document.getElementById("cart-count");
+  const cartItemsList = document.getElementById("cart-items");
+  const cartTotal = document.getElementById("cart-total");
+  const cartNote = document.getElementById("cart-note");
+
+  function loadCart() {
+    const savedCart = localStorage.getItem('kkshop_cart');
+    if (savedCart) {
+      cart = JSON.parse(savedCart);
+      updateCart();
+    }
+  }
+
+  function saveCart() {
+    localStorage.setItem('kkshop_cart', JSON.stringify(cart));
+  }
+
+  function toggleCart() {
+    cartSidebar.classList.toggle("open");
+  }
+
+  function addToCart(name, price) {
+    cart.push({ name, price });
+    updateCart();
+    saveCart();
+    showNotification(`${name} ajouté au panier`);
+  }
+
+  function removeFromCart(index) {
+    cart.splice(index, 1);
+    updateCart();
+    saveCart();
+  }
+
+  function updateCart() {
+    cartItemsList.innerHTML = "";
+    let total = 0;
+    cart.forEach((item, index) => {
+      total += item.price;
+      const li = document.createElement("li");
+      li.innerHTML = `${item.name} - ${item.price.toFixed(2)} € <button class="remove-btn" onclick="removeFromCart(${index})">❌</button>`;
+      cartItemsList.appendChild(li);
+    });
+    cartCount.textContent = cart.length;
+    cartTotal.textContent = total.toFixed(2);
+    cartNote.textContent = "Ce site est faux, le panier est uniquement présent à but esthétique.";
+  }
+
+  function showNotification(message) {
+    const notif = document.getElementById("notification");
+    notif.textContent = message;
+    notif.classList.add("show");
+    setTimeout(() => {
+      notif.classList.remove("show");
+    }, 2000);
+  }
+
+  // Initialisation
+  window.addEventListener("DOMContentLoaded", () => {
+    if (typeof products !== 'undefined') {
+      loadCart();
+      renderProducts();
+    } else {
+      console.error("products n'est pas défini. Vérifie que products-data.js est bien chargé.");
+    }
+  });
+</script>
+
+</body>
+</html>

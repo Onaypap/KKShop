@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <title>KKShop - Contact</title>
+  <link rel="stylesheet" href="style.css" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <style>
+    form {
+      max-width: 400px;
+      margin: 20px auto;
+      padding: 15px;
+      border: 1px solid #ccc;
+      border-radius: 5px;
+    }
+
+    form label {
+      display: block;
+      margin-top: 15px;
+    }
+
+    form input, form textarea {
+      width: 100%;
+      padding: 8px;
+      margin-top: 5px;
+      box-sizing: border-box;
+    }
+
+    form button {
+      margin-top: 20px;
+      padding: 10px 20px;
+      background-color: #4CAF50;
+      border: none;
+      color: white;
+      cursor: pointer;
+      border-radius: 4px;
+    }
+
+    .success-message {
+      color: green;
+      text-align: center;
+      margin-top: 15px;
+      font-weight: bold;
+    }
+  </style>
+</head>
+<body>
+
+<header>
+  <div class="container header-content">
+    <div class="logo">  
+      <a href="index.html">  
+        <img src="images/KKShoplogo.png" alt="Logo KKShop" />
+      </a>
+    </div>
+    <nav>
+      <ul class="nav-links">
+        <li><a href="index.html">Accueil</a></li>
+        <li><a href="promotions.html">Promotions</a></li>
+        <li><a href="products.html">Voir les produits</a></li>
+        <li><a href="contact.html" class="active">Contact</a></li>
+      </ul>
+    </nav>
+    <div class="search-bar">
+      <input type="text" placeholder="Rechercher un produit..." />
+      <button>🔍</button>
+    </div>
+    <div class="cart-icon" onclick="toggleCart()">🛒<span id="cart-count">0</span></div>
+  </div>
+</header>
+
+<section class="contact container">
+  <h1>Contactez-nous</h1>
+  <form id="contactForm" novalidate>
+    <label for="name">Nom complet *</label>
+    <input type="text" id="name" name="name" required />
+
+    <label for="email">Email *</label>
+    <input type="email" id="email" name="email" required />
+
+    <label for="message">Message *</label>
+    <textarea id="message" name="message" rows="5" required></textarea>
+
+    <button type="submit">Envoyer</button>
+    <p class="success-message" id="successMessage" style="display:none;"></p>
+  </form>
+</section>
+
+<script>
+  const form = document.getElementById("contactForm");
+  const successMessage = document.getElementById("successMessage");
+
+  form.addEventListener("submit", function(event) {
+    event.preventDefault();
+
+    // Validation basique
+    if (!form.name.value.trim() || !form.email.value.trim() || !form.message.value.trim()) {
+      alert("Veuillez remplir tous les champs obligatoires.");
+      return;
+    }
+
+    // Vérification email simple
+    const emailPattern = /^[^ ]+@[^ ]+\.[a-z]{2,3}$/;
+    if (!emailPattern.test(form.email.value.trim().toLowerCase())) {
+      alert("Veuillez saisir une adresse email valide.");
+      return;
+    }
+
+    // Simuler envoi
+    successMessage.textContent = "Ce site est faux, pourquoi voulez-vous envoyer un message ?";
+    successMessage.style.display = "block";
+
+    // Reset du formulaire
+    form.reset();
+  });
+</script>
+
+</body>
+</html>

@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <title>Admin - Gestion des Produits</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      padding: 20px;
+      max-width: 800px;
+      margin: auto;
+    }
+    input, textarea {
+      width: 100%;
+      margin-bottom: 10px;
+      padding: 8px;
+      font-size: 16px;
+    }
+    button {
+      padding: 10px 20px;
+      font-size: 16px;
+      margin-bottom: 20px;
+      cursor: pointer;
+    }
+    .product {
+      border: 1px solid #ccc;
+      padding: 10px;
+      margin-bottom: 10px;
+    }
+    pre {
+      background: #f5f5f5;
+      padding: 10px;
+      white-space: pre-wrap;
+    }
+  </style>
+</head>
+<body>
+
+  <h1>Ajouter un produit</h1>
+
+  <form id="productForm">
+    <input type="text" id="name" placeholder="Nom du produit" required />
+    <textarea id="description" placeholder="Description du produit" required></textarea>
+    <input type="number" id="price" placeholder="Prix (€)" step="0.01" required />
+    <input type="number" id="oldPrice" placeholder="Ancien prix (€) (laisser vide si pas de promo)" step="0.01" />
+    <input type="text" id="image" placeholder="Chemin de l’image (ex: images/produit1.jpg)" required />
+    <button type="submit">Ajouter le produit</button>
+  </form>
+
+  <h2>Produits ajoutés</h2>
+  <div id="productList"></div>
+
+  <h2>Code à copier pour products-data.js</h2>
+  <pre id="output"></pre>
+
+  <script>
+    const form = document.getElementById('productForm');
+    const productList = document.getElementById('productList');
+    const output = document.getElementById('output');
+    const products = [];
+
+    form.addEventListener('submit', (e) => {
+      e.preventDefault();
+
+      const name = document.getElementById('name').value.trim();
+      const description = document.getElementById('description').value.trim();
+      const price = parseFloat(document.getElementById('price').value);
+      const oldPriceRaw = document.getElementById('oldPrice').value.trim();
+      const oldPrice = oldPriceRaw ? parseFloat(oldPriceRaw) : null;
+      const image = document.getElementById('image').value.trim();
+
+      const product = { name, description, price, oldPrice, image };
+      products.push(product);
+      displayProducts();
+      form.reset();
+    });
+
+    function displayProducts() {
+      productList.innerHTML = '';
+      products.forEach((prod, index) => {
+        const div = document.createElement('div');
+        div.className = 'product';
+        div.innerHTML = `
+          <strong>${prod.name}</strong><br>
+          ${prod.description}<br>
+          Prix : ${prod.price.toFixed(2)} €
+          ${prod.oldPrice ? `(ancien prix : ${prod.oldPrice.toFixed(2)} €)` : ''}<br>
+          Image : ${prod.image}<br>
+          <button onclick="removeProduct(${index})">🗑 Supprimer</button>
+        `;
+        productList.appendChild(div);
+      });
+
+      const jsOutput = `const products = [\n` + products.map(p => {
+        return `  {
+    name: "${p.name}",
+    description: "${p.description}",
+    price: ${p.price},
+    oldPrice: ${p.oldPrice !== null ? p.oldPrice : 'null'},
+    image: "${p.image}"
+  }`;
+      }).join(",\n") + `\n];`;
+
+      output.textContent = jsOutput;
+    }
+
+    function removeProduct(index) {
+      products.splice(index, 1);
+      displayProducts();
+    }
+  </script>
+
+</body>
+</html>
